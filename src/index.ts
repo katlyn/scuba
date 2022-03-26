@@ -34,7 +34,11 @@ bot.on('messageCreate', async msg => {
       const response = m.respond(msg.content)
       bot.createMessage(msg.channel.id, response.join(' '))
     } catch (e) {
-      bot.createMessage(msg.channel.id, 'something broke and I couldn\'t generate a response')
+      try {
+        bot.createMessage(msg.channel.id, 'something broke and I couldn\'t generate a response')
+      } catch (eee) {
+        console.error(eee)
+      }
     }
   } else if (!msg.author.bot && !commonPrefixes.includes(msg.content[0])) {
     m.seed(msg.content)
