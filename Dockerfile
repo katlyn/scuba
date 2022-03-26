@@ -9,7 +9,6 @@ FROM node:15-alpine
 WORKDIR /usr/bot
 COPY package.json package-lock.json /usr/bot/
 RUN npm ci --production
-COPY migrations /usr/bot/migrations/
 COPY --from=0 /usr/build/dist /usr/bot/dist
 
 CMD [ "node", "/usr/bot/dist/index.js" ]

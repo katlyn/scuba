@@ -30,8 +30,12 @@ bot.on('ready', () => console.log('ready'))
 
 bot.on('messageCreate', async msg => {
   if (!msg.author.bot && msg.mentions.includes(bot.user)) {
-    const response = m.respond(msg.content)
-    bot.createMessage(msg.channel.id, response.join(' '))
+    try {
+      const response = m.respond(msg.content)
+      bot.createMessage(msg.channel.id, response.join(' '))
+    } catch (e) {
+      bot.createMessage(msg.channel.id, 'something broke and I couldn\'t generate a response')
+    }
   } else if (!msg.author.bot && !commonPrefixes.includes(msg.content[0])) {
     m.seed(msg.content)
     await db.put(msg.id, msg.content)
