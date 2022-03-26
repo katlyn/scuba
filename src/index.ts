@@ -69,6 +69,7 @@ const attachmentWatcher = async (msg: Message<PossiblyUncachedTextableChannel>) 
 }
 
 bot.on('messageCreate', attachmentWatcher)
+bot.on('messageUpdate', attachmentWatcher)
 
 bot.connect()
   .catch(err => {
