@@ -62,7 +62,11 @@ bot.on('messageCreate', async msg => {
 })
 
 const attachmentWatcher = async (msg: Message<PossiblyUncachedTextableChannel>) => {
-  const urls = msg.attachments.map(a => a.proxy_url).concat(msg.embeds.map(e => e.image?.proxy_url).filter(v => v !== undefined))
+  const urls: string[] = []
+  msg.attachments?.forEach(a => urls.push(a.proxy_url))
+  msg.embeds?.forEach(e => {
+    if (e.image) urls.push(e.image.proxy_url)
+  })
   for (const url of urls) {
     await attachmentDb.put(url, url)
   }
