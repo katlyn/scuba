@@ -32,7 +32,12 @@ bot.on('messageCreate', async msg => {
   if (!msg.author.bot && msg.mentions.includes(bot.user)) {
     try {
       const response = m.respond(msg.content)
-      bot.createMessage(msg.channel.id, response.join(' '))
+      bot.createMessage(msg.channel.id, {
+        allowedMentions: {
+          users: []
+        },
+        content: response.join(' ')
+      })
     } catch (e) {
       try {
         bot.createMessage(msg.channel.id, 'something broke and I couldn\'t generate a response')
