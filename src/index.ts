@@ -13,7 +13,10 @@ const generalDb = new Level('general', { valueEncoding: 'json' })
 let m: Markov
 
 const train = async () => {
-  const order = Number(await generalDb.get('order'))
+  let order = 2
+  try {
+    order = Number(await generalDb.get('order'))
+  } catch (e) {}
   m = markov(isNaN(order) ? undefined : order)
   for await (const [key, value] of messageDb.iterator()) {
     await new Promise(resolve => m.seed(value, () => resolve(null)))
