@@ -1,7 +1,7 @@
 import 'source-map-support/register'
 
 import { CommandClient, Message, MessageContent, PossiblyUncachedTextableChannel } from 'eris'
-import markov, { Markov } from 'markov'
+import Markov from './markov'
 import { Level } from 'level'
 
 const commonPrefixes = '!$%^&*()-+=.>?/:;'.split('')
@@ -17,9 +17,9 @@ const train = async () => {
   try {
     order = Number(await generalDb.get('order'))
   } catch (e) {}
-  m = markov(isNaN(order) ? undefined : order)
+  m = new Markov()
   for await (const [key, value] of messageDb.iterator()) {
-    await new Promise(resolve => m.seed(value, () => resolve(null)))
+    m.seed(value)
   }
   console.log('Seeded markov thing')
 }
