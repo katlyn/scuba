@@ -5,7 +5,7 @@ declare module 'markov' {
     word: string
   }
 
-  interface Markov {
+  export interface Markov {
     seed: (data: string | EventEmitter, cb?: () => unknown) => void,
     search: (text: string) => string | undefined
     pick: () => string

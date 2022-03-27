@@ -1,25 +1,40 @@
 import 'source-map-support/register'
 
 import { CommandClient, Message, MessageContent, PossiblyUncachedTextableChannel } from 'eris'
-import markov from 'markov'
+import markov, { Markov } from 'markov'
 import { Level } from 'level'
 
 const commonPrefixes = '!$%^&*()-+=.>?/:;'.split('')
 
 const messageDb = new Level('messages',  { valueEncoding: 'json' })
-const attachmentDb = new Level('general', { valueEncoding: 'json' })
+const attachmentDb = new Level('attachments', { valueEncoding: 'json' })
+const generalDb = new Level('general', { valueEncoding: 'json' })
 
-const m = markov()
+let m: Markov
 
-;(async () => {
+const train = async () => {
+  const order = Number(await generalDb.get('order'))
+  m = markov(isNaN(order) ? undefined : order)
   for await (const [key, value] of messageDb.iterator()) {
     await new Promise(resolve => m.seed(value, () => resolve(null)))
   }
   console.log('Seeded markov thing')
-})()
+}
+
+train()
 
 const bot = new CommandClient(process.env.TOKEN, {
   intents: ['guildMessages']
+})
+
+bot.registerCommand('retrain', async (msg, args) => {
+  const order = Number(args[0])
+  if (isNaN(order) || order < 1 || order > 10) {
+    return 'number between 1 and 10 pls'
+  }
+  generalDb.put('order', order.toString())
+  await train()
+  return 'done'
 })
 
 process.on('SIGINT', () => {
