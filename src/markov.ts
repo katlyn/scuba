@@ -24,14 +24,9 @@ export default class Markov {
     }
   }
 
-  respond (prompt: string) {
+  respond (prompt: string): string[] {
     const seeds = prompt.split(/\s+/)
-    if (seeds.length === 0) {
-      const keys = Array.from(this.words.keys())
-      seeds.push(keys[Math.floor(Math.random() * keys.length)])
-    } else {
-      shuffleArray(seeds)
-    }
+    shuffleArray(seeds)
     for (const seed of seeds) {
       if (this.words.has(seed)) {
         let lastResult = seed
@@ -46,6 +41,8 @@ export default class Markov {
         }
       }
     }
-    return "`scuba doesn't know enough to answer that :<`".split(' ')
+    const keys = Array.from(this.words.keys())
+    const rand = keys[Math.floor(Math.random() * keys.length)]
+    return this.respond(rand)
   }
 }
