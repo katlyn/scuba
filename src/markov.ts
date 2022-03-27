@@ -22,12 +22,11 @@ export default class Markov {
         let lastResult = seed
         let generated: string[] = []
         while (true) {
+          generated.push(lastResult)
           const options = this.words.get(lastResult)
           lastResult = options[Math.floor(Math.random() * options.length)]
           if (lastResult === null) {
             return generated
-          } else {
-            generated.push(lastResult)
           }
         }
       }
