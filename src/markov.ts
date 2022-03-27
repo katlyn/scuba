@@ -1,3 +1,12 @@
+function shuffleArray<T>(array: Array<T>) {
+  for (var i = array.length - 1; i > 0; i--) {
+      var j = Math.floor(Math.random() * (i + 1));
+      var temp = array[i];
+      array[i] = array[j];
+      array[j] = temp;
+  }
+}
+
 export default class Markov {
   words = new Map<string, Array<string|null>>()
   constructor () {}
@@ -17,6 +26,7 @@ export default class Markov {
 
   respond (prompt: string) {
     const seeds = prompt.split(/\s+/)
+    shuffleArray(seeds)
     for (const seed of seeds) {
       if (this.words.has(seed)) {
         let lastResult = seed
