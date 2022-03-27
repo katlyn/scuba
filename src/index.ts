@@ -28,6 +28,8 @@ train()
 
 const bot = new CommandClient(process.env.TOKEN, {
   intents: ['guildMessages']
+}, {
+  prefix: '>'
 })
 
 bot.registerCommand('retrain', async (msg, args) => {
