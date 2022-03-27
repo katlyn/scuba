@@ -26,7 +26,12 @@ export default class Markov {
 
   respond (prompt: string) {
     const seeds = prompt.split(/\s+/)
-    shuffleArray(seeds)
+    if (seeds.length === 0) {
+      const keys = Array.from(this.words.keys())
+      seeds.push(keys[Math.floor(Math.random() * keys.length)])
+    } else {
+      shuffleArray(seeds)
+    }
     for (const seed of seeds) {
       if (this.words.has(seed)) {
         let lastResult = seed
