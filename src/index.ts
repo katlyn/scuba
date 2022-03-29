@@ -102,10 +102,11 @@ bot.on('messageCreate', async msg => {
   }
 })
 
-bot.on('messageUpdate', msg => {
-  if (!msg?.author?.bot && !msg.mentions.includes(bot.user) && !commonPrefixes.includes(msg.content[0])) {
-    messageDb.put(msg.id, msg.content)
-    train()
+bot.on('messageUpdate', async uncached => {
+  const msg = await bot.getMessage(uncached.channel.id, uncached.id)
+  if (!msg.author.bot && !msg.mentions.includes(bot.user) && !commonPrefixes.includes(msg.content[0])) {
+    await messageDb.put(msg.id, msg.content)
+    await train()
   }
 })
 
