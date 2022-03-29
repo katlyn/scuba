@@ -24,6 +24,17 @@ const train = async () => {
   console.log('Seeded markov thing')
 }
 
+const forgetMessages = async (ids: string[]) => {
+  for (const id in ids) {
+    await messageDb.del(id)
+  }
+  await train()
+}
+
+const forgetImage = async (img: string) => {
+  await attachmentDb.del(img)
+}
+
 train()
 
 const bot = new CommandClient(process.env.TOKEN, {
@@ -40,6 +51,15 @@ bot.registerCommand('retrain', async (msg, args) => {
   generalDb.put('order', order.toString())
   await train()
   return 'done'
+})
+
+bot.registerCommand('forget', async (msg, args) => {
+  await forgetMessages(args)
+  return 'forgotten forever'
+})
+bot.registerCommand('forgetImage', async (msg, args) => {
+  await forgetImage(args[0])
+  return 'image gone'
 })
 
 process.on('SIGINT', () => {
@@ -80,6 +100,17 @@ bot.on('messageCreate', async msg => {
     await messageDb.put(msg.id, msg.content)
   }
 })
+
+bot.on('messageUpdate', msg => {
+  if (!msg.author.bot && !msg.mentions.includes(bot.user) && !commonPrefixes.includes(msg.content[0])) {
+    messageDb.put(msg.id, msg.content)
+    train()
+  }
+})
+
+// Forget messages if they're deleted
+bot.on('messageDelete', msg => forgetMessages([msg.id]))
+bot.on('messageDeleteBulk', msgs => forgetMessages(msgs.map(m => m.id)))
 
 const attachmentWatcher = async (msg: Message<PossiblyUncachedTextableChannel>) => {
   const urls: string[] = []
