@@ -103,7 +103,7 @@ bot.on('messageCreate', async msg => {
 })
 
 bot.on('messageUpdate', msg => {
-  if (!msg.author.bot && !msg.mentions.includes(bot.user) && !commonPrefixes.includes(msg.content[0])) {
+  if (!msg?.author?.bot && !msg.mentions.includes(bot.user) && !commonPrefixes.includes(msg.content[0])) {
     messageDb.put(msg.id, msg.content)
     train()
   }
