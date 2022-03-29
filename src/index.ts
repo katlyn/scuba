@@ -80,12 +80,13 @@ bot.on('messageCreate', async msg => {
         content: m.respond(msg.content).join(' ')
       }
       if (Math.random() * 10 > 9) {
-        const images: string[] = []
-        for await (const [key] of attachmentDb.iterator()) {
-          images.push(key)
+        const images: string[][] = []
+        for await (const v of attachmentDb.iterator()) {
+          images.push(v)
         }
         const random = Math.floor(Math.random() * images.length)
-        response.content += '\n' + images[random]
+        const [id, url] = images[random]
+        response.content += `\n${url} (${id})`
       }
       bot.createMessage(msg.channel.id, response)
     } catch (e) {
@@ -114,12 +115,12 @@ bot.on('messageDeleteBulk', msgs => forgetMessages(msgs.map(m => m.id)))
 
 const attachmentWatcher = async (msg: Message<PossiblyUncachedTextableChannel>) => {
   const urls: string[] = []
-  msg.attachments?.forEach(a => urls.push(a.proxy_url))
+  msg.attachments?.forEach(a => urls.push(a.url))
   msg.embeds?.forEach(e => {
-    if (e.image) urls.push(e.image.proxy_url)
+    if (e.image) urls.push(e.image.url)
   })
-  for (const url of urls) {
-    await attachmentDb.put(url, url)
+  if (urls.length > 0) {
+    await attachmentDb.put(msg.id, urls[0])
   }
 }
 
