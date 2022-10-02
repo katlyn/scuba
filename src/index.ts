@@ -1,8 +1,10 @@
 import 'source-map-support/register'
 
-import { CommandClient, Message, MessageContent, PossiblyUncachedTextableChannel } from 'eris'
+import Eris, { AdvancedMessageContent, CommandClient, Message, MessageContent, PossiblyUncachedTextableChannel } from 'eris'
 import Markov from './markov'
 import { Level } from 'level'
+import womboStyles from './womboStyles'
+import { generateImage } from 'dream-api'
 
 const commonPrefixes = '!$%^&*()-+=.>?/:;'.split('')
 
@@ -73,13 +75,29 @@ bot.on('ready', () => console.log('ready'))
 bot.on('messageCreate', async msg => {
   if (!msg.author.bot && msg.mentions.includes(bot.user)) {
     try {
-      const response: MessageContent = {
+      const response: AdvancedMessageContent = {
         allowedMentions: {
           users: []
         },
         content: m.respond(msg.content).join(' ')
       }
-      if (Math.random() * 10 > 9) {
+
+      let attachment: Eris.FileContent
+      let typing: Promise<void>
+      if (Math.random() * 5 > 4) {
+        // Wombo Time
+        typing = bot.sendChannelTyping(msg.channel.id)
+        const style = womboStyles[Math.floor(Math.random() * womboStyles.length)]
+        const res = await generateImage(style.id, response.content)
+        console.log(res.result.final)
+        const imageReq = await fetch(res.result.final)
+        if (imageReq.ok) {
+          attachment = {
+            file: Buffer.from(await imageReq.arrayBuffer()),
+            name: 'generated.jpg'
+          }
+        }
+      } else if (Math.random() * 10 > 9) {
         const images: string[][] = []
         for await (const v of attachmentDb.iterator()) {
           images.push(v)
@@ -88,7 +106,9 @@ bot.on('messageCreate', async msg => {
         const [id, url] = images[random]
         response.content += `\n${url} (${id})`
       }
-      bot.createMessage(msg.channel.id, response)
+
+      await typing
+      bot.createMessage(msg.channel.id, response, attachment)
     } catch (e) {
       try {
         bot.createMessage(msg.channel.id, 'something broke and I couldn\'t generate a response')

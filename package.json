@@ -1,7 +1,7 @@
 {
   "name": "scuba",
   "version": "1.0.0",
-  "description": " Markov-chaning discord bot",
+  "description": " Markov-chaining discord bot",
   "main": "index.js",
   "scripts": {
     "build": "tsc"
@@ -9,13 +9,14 @@
   "author": "",
   "license": "MIT",
   "dependencies": {
-    "eris": "^0.16.1",
+    "dream-api": "^1.0.8",
+    "eris": "^0.17.1",
     "level": "^8.0.0",
     "markov": "^0.0.7",
     "source-map-support": "^0.5.21"
   },
   "devDependencies": {
-    "@types/node": "^17.0.23",
-    "typescript": "^4.6.3"
+    "@types/node": "^18.8.0",
+    "typescript": "^4.8.4"
   }
 }
