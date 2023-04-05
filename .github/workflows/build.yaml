@@ -3,7 +3,7 @@ name: Build docker container
 on:
   push:
     branches:
-      - master
+      - owo
 
 jobs:
   build:
