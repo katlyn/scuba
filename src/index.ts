@@ -3,8 +3,6 @@ import 'source-map-support/register'
 import Eris, { AdvancedMessageContent, CommandClient, Message, MessageContent, PossiblyUncachedTextableChannel } from 'eris'
 import Markov from './markov'
 import { Level } from 'level'
-import womboStyles from './womboStyles'
-import { generateImage } from 'dream-api'
 
 const commonPrefixes = '!$%^&*()-+=.>?/:;'.split('')
 
@@ -84,20 +82,7 @@ bot.on('messageCreate', async msg => {
 
       let attachment: Eris.FileContent
       let typing: Promise<void>
-      if (Math.random() * 5 > 4) {
-        // Wombo Time
-        typing = bot.sendChannelTyping(msg.channel.id)
-        const style = womboStyles[Math.floor(Math.random() * womboStyles.length)]
-        const res = await generateImage(style.id, response.content)
-        console.log(res.result.final)
-        const imageReq = await fetch(res.result.final)
-        if (imageReq.ok) {
-          attachment = {
-            file: Buffer.from(await imageReq.arrayBuffer()),
-            name: 'generated.jpg'
-          }
-        }
-      } else if (Math.random() * 10 > 9) {
+      if (Math.random() * 10 > 9) {
         const images: string[][] = []
         for await (const v of attachmentDb.iterator()) {
           images.push(v)
