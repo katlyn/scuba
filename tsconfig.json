@@ -1,17 +1,10 @@
 {
   "compilerOptions": {
-    "strict": true,
-    "module": "commonjs",
-    "esModuleInterop": true,
-    "target": "es2016",
-    "noImplicitAny": true,
-    "moduleResolution": "node",
     "sourceMap": true,
     "outDir": "dist",
-    "baseUrl": ".",
-    "skipLibCheck": true
   },
   "include": [
     "src/**/*"
-  ]
+  ],
+  "extends": "@tsconfig/node20/tsconfig.json"
 }

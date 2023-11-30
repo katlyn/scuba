@@ -2,7 +2,6 @@ import 'source-map-support/register'
 
 import Eris, { AdvancedMessageContent, CommandClient, Message, PossiblyUncachedTextableChannel } from 'eris'
 import { Level } from 'level'
-import * as process from "process";
 import OrderedMarkov from "./orderedMarkov";
 
 const commonPrefixes = '!$%^&*()-+=.>?/:;'.split('')
@@ -66,6 +65,8 @@ bot.registerCommand('forgetImage', async (_, args) => {
   await forgetImage(args[0])
   return 'image gone'
 })
+
+console.log(process.on)
 
 process.on('SIGINT', () => {
   bot.disconnect({ reconnect: false })
