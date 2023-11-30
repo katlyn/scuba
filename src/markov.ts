@@ -1,8 +1,8 @@
 function shuffleArray<T>(array: Array<T>) {
-  for (var i = array.length - 1; i > 0; i--) {
-      var j = Math.floor(Math.random() * (i + 1));
-      var temp = array[i];
-      array[i] = array[j];
+  for (let i = array.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    const temp = array[i];
+    array[i] = array[j];
       array[j] = temp;
   }
 }
@@ -17,7 +17,7 @@ export default class Markov {
       const word = words[i]
       const wordFollow = words[i + 1] || null
       if (this.words.has(word)) {
-        this.words.get(word).push(wordFollow)
+        this.words.get(word)!.push(wordFollow)
       } else {
         this.words.set(word, [wordFollow])
       }
@@ -34,6 +34,7 @@ export default class Markov {
         while (true) {
           generated.push(lastResult)
           const options = this.words.get(lastResult)
+          // @ts-ignore
           lastResult = options[Math.floor(Math.random() * options.length)]
           if (lastResult === null) {
             return generated

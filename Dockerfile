@@ -1,14 +1,18 @@
-FROM node:18-alpine
-WORKDIR /usr/build
-COPY tsconfig.json package.json package-lock.json /usr/build/
-RUN npm ci
-COPY ./src /usr/build/src/
-RUN npm run build
+FROM node:20-alpine as base
+RUN corepack enable
 
-FROM node:18-alpine
+FROM base as build
+WORKDIR /usr/build
+RUN corepack enable
+COPY tsconfig.json package.json pnpm-lock.yaml /usr/build/
+RUN pnpm i --frozen-lockfile
+COPY ./src /usr/build/src/
+RUN pnpm build
+
+FROM base
 WORKDIR /usr/bot
-COPY package.json package-lock.json /usr/bot/
-RUN npm ci --production
-COPY --from=0 /usr/build/dist /usr/bot/dist
+COPY package.json pnpm-lock.yaml /usr/bot/
+RUN pnpm i --prod
+COPY --from=build /usr/build/dist /usr/bot/dist
 
 CMD [ "node", "/usr/bot/dist/index.js" ]

@@ -1,8 +1,9 @@
 import 'source-map-support/register'
 
-import Eris, { AdvancedMessageContent, CommandClient, Message, MessageContent, PossiblyUncachedTextableChannel } from 'eris'
-import Markov from './markov'
+import Eris, { AdvancedMessageContent, CommandClient, Message, PossiblyUncachedTextableChannel } from 'eris'
 import { Level } from 'level'
+import * as process from "process";
+import OrderedMarkov from "./orderedMarkov";
 
 const commonPrefixes = '!$%^&*()-+=.>?/:;'.split('')
 
@@ -10,15 +11,15 @@ const messageDb = new Level('messages',  { valueEncoding: 'json' })
 const attachmentDb = new Level('attachments', { valueEncoding: 'json' })
 const generalDb = new Level('general', { valueEncoding: 'json' })
 
-let m: Markov
+let m: OrderedMarkov
 
 const train = async () => {
   let order = 2
   try {
     order = Number(await generalDb.get('order'))
   } catch (e) {}
-  m = new Markov()
-  for await (const [key, value] of messageDb.iterator()) {
+  m = new OrderedMarkov(order)
+  for await (const [, value] of messageDb.iterator()) {
     m.seed(value)
   }
   console.log('Seeded markov thing')
@@ -35,7 +36,11 @@ const forgetImage = async (img: string) => {
   await attachmentDb.del(img)
 }
 
-train()
+void train()
+
+if (process.env.TOKEN === undefined) {
+  throw new Error("Token not provided")
+}
 
 const bot = new CommandClient(process.env.TOKEN, {
   intents: ['guildMessages']
@@ -43,21 +48,21 @@ const bot = new CommandClient(process.env.TOKEN, {
   prefix: '>'
 })
 
-bot.registerCommand('retrain', async (msg, args) => {
+bot.registerCommand('retrain', async (_, args) => {
   const order = Number(args[0])
   if (isNaN(order) || order < 1 || order > 10) {
-    return 'number between 1 and 10 pls'
+    return 'number between 1 and 10 pls. the current order is ' + await generalDb.get("order")
   }
-  generalDb.put('order', order.toString())
+  await generalDb.put('order', order.toString())
   await train()
   return 'done'
 })
 
-bot.registerCommand('forget', async (msg, args) => {
+bot.registerCommand('forget', async (_, args) => {
   await forgetMessages(args)
   return 'forgotten forever'
 })
-bot.registerCommand('forgetImage', async (msg, args) => {
+bot.registerCommand('forgetImage', async (_, args) => {
   await forgetImage(args[0])
   return 'image gone'
 })
@@ -80,8 +85,8 @@ bot.on('messageCreate', async msg => {
         content: m.respond(msg.content).join(' ')
       }
 
-      let attachment: Eris.FileContent
-      let typing: Promise<void>
+      let attachment: Eris.FileContent | undefined = undefined
+      let typing: Promise<void> = Promise.resolve()
       if (Math.random() * 10 > 9) {
         const images: string[][] = []
         for await (const v of attachmentDb.iterator()) {
@@ -93,10 +98,10 @@ bot.on('messageCreate', async msg => {
       }
 
       await typing
-      bot.createMessage(msg.channel.id, response, attachment)
+      await bot.createMessage(msg.channel.id, response, attachment)
     } catch (e) {
       try {
-        bot.createMessage(msg.channel.id, 'something broke and I couldn\'t generate a response')
+        await bot.createMessage(msg.channel.id, 'something broke and I couldn\'t generate a response :<')
       } catch (eee) {
         console.error(eee)
       }
@@ -117,13 +122,13 @@ bot.on('messageUpdate', async uncached => {
 
 // Forget messages if they're deleted
 bot.on('messageDelete', msg => forgetMessages([msg.id]))
-bot.on('messageDeleteBulk', msgs => forgetMessages(msgs.map(m => m.id)))
+bot.on('messageDeleteBulk', messages => forgetMessages(messages.map(m => m.id)))
 
 const attachmentWatcher = async (msg: Message<PossiblyUncachedTextableChannel>) => {
   const urls: string[] = []
   msg.attachments?.forEach(a => urls.push(a.url))
   msg.embeds?.forEach(e => {
-    if (e.image) urls.push(e.image.url)
+    if (e.image?.url) urls.push(e.image.url)
   })
   if (urls.length > 0) {
     await attachmentDb.put(msg.id, urls[0])
