@@ -27,6 +27,7 @@ const train = async () => {
 const forgetMessages = async (ids: string[]) => {
   for (const id in ids) {
     await messageDb.del(id)
+    await attachmentDb.del(id)
   }
   await train()
 }
