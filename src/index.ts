@@ -1,6 +1,6 @@
 import 'source-map-support/register'
 
-import Eris, { AdvancedMessageContent, CommandClient, Message, PossiblyUncachedTextableChannel } from 'eris'
+import Eris, { AdvancedMessageContent, CommandClient, Message, PossiblyUncachedTextableChannel, TextableChannel } from 'eris'
 import { Level } from 'level'
 import OrderedMarkov from "./orderedMarkov";
 
@@ -21,7 +21,6 @@ const train = async () => {
   for await (const [, value] of messageDb.iterator()) {
     m.seed(value)
   }
-  console.log('Seeded markov thing')
 }
 
 const forgetMessages = async (ids: string[]) => {
@@ -36,7 +35,27 @@ const forgetImage = async (img: string) => {
   await attachmentDb.del(img)
 }
 
-void train()
+const attachmentWatcher = async (msg: Message<PossiblyUncachedTextableChannel>) => {
+  const urls: string[] = []
+  msg.attachments?.forEach(a => urls.push(a.url))
+  msg.embeds?.forEach(e => {
+    if (e.image?.url) urls.push(e.image.url)
+  })
+  if (urls.length > 0) {
+    await attachmentDb.put(msg.id, urls[0])
+  }
+}
+
+const storeMessage = async (msg: Message<TextableChannel>, retrain = false) => {
+  if (!msg.author.bot && !msg.mentions.includes(bot.user) && !commonPrefixes.includes(msg.content[0])) {
+    await messageDb.put(msg.id, msg.content)
+    if (retrain) {
+      await train()
+    } else {
+      m.seed(msg.content)
+    }
+  }
+}
 
 if (process.env.TOKEN === undefined) {
   throw new Error("Token not provided")
@@ -62,17 +81,10 @@ bot.registerCommand('forget', async (_, args) => {
   await forgetMessages(args)
   return 'forgotten forever'
 })
+
 bot.registerCommand('forgetImage', async (_, args) => {
   await forgetImage(args[0])
   return 'image gone'
-})
-
-console.log(process.on)
-
-process.on('SIGINT', () => {
-  bot.disconnect({ reconnect: false })
-  messageDb.close()
-  attachmentDb.close()
 })
 
 bot.on('ready', () => console.log('ready'))
@@ -108,37 +120,32 @@ bot.on('messageCreate', async msg => {
         console.error(eee)
       }
     }
-  } else if (!msg.author.bot && !commonPrefixes.includes(msg.content[0])) {
-    m.seed(msg.content)
-    await messageDb.put(msg.id, msg.content)
   }
 })
 
-bot.on('messageUpdate', async uncached => {
-  const msg = await bot.getMessage(uncached.channel.id, uncached.id)
-  if (!msg.author.bot && !msg.mentions.includes(bot.user) && !commonPrefixes.includes(msg.content[0])) {
-    await messageDb.put(msg.id, msg.content)
-    await train()
-  }
-})
-
-// Forget messages if they're deleted
-bot.on('messageDelete', msg => forgetMessages([msg.id]))
-bot.on('messageDeleteBulk', messages => forgetMessages(messages.map(m => m.id)))
-
-const attachmentWatcher = async (msg: Message<PossiblyUncachedTextableChannel>) => {
-  const urls: string[] = []
-  msg.attachments?.forEach(a => urls.push(a.url))
-  msg.embeds?.forEach(e => {
-    if (e.image?.url) urls.push(e.image.url)
+// Event handlers that modify the database
+if (process.env.READ_ONLY !== "true") {
+  bot.on('messageCreate', storeMessage)
+  bot.on('messageUpdate', async uncached => {
+    const msg = await bot.getMessage(uncached.channel.id, uncached.id)
+    await storeMessage(msg)
   })
-  if (urls.length > 0) {
-    await attachmentDb.put(msg.id, urls[0])
-  }
+
+  // Forget messages if they're deleted
+  bot.on('messageDelete', msg => forgetMessages([msg.id]))
+  bot.on('messageDeleteBulk', messages => forgetMessages(messages.map(m => m.id)))
+
+  bot.on('messageCreate', attachmentWatcher)
+  bot.on('messageUpdate', attachmentWatcher)
 }
 
-bot.on('messageCreate', attachmentWatcher)
-bot.on('messageUpdate', attachmentWatcher)
+process.on('SIGINT', () => {
+  bot.disconnect({ reconnect: false })
+  messageDb.close()
+  attachmentDb.close()
+})
+
+train()
 
 bot.connect()
   .catch(err => {
