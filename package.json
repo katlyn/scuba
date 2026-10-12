@@ -10,7 +10,7 @@
   "license": "MIT",
   "dependencies": {
     "array-keyed-map": "^2.1.3",
-    "eris": "^0.18.0",
+    "eris": "0.17.2",
     "google-translate-api-x": "^10.7.3",
     "level": "^10.0.0",
     "markov": "^0.0.7",
