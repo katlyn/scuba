@@ -19,6 +19,7 @@ function interlace<T>(...parts: T[][]): T[] {
 }
 
 async function randomTranslate(input: string, inputLang: languages, targetLang: languages, iterations: number): Promise<string> {
+    console.log(`Translating for ${iterations} iterations: ${input}`)
     if (iterations <= 0) {
         return input
     }
@@ -47,5 +48,6 @@ export async function lethargy (inputParts: string[]): Promise<string> {
     const randomMessage = messages[Math.floor(Math.random() * messages.length)]
 
     const interlaced = interlace(inputParts, randomMessage).join(" ")
+    console.log("Interlaced message: ", interlaced)
     return randomTranslate(interlaced, languages.en, languages.en, 10)
 }
