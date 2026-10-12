@@ -1,14 +1,12 @@
 import 'source-map-support/register'
 
 import Eris, { AdvancedMessageContent, CommandClient, Message, PossiblyUncachedTextableChannel, TextableChannel } from 'eris'
-import { Level } from 'level'
+
+import { messageDb, attachmentDb, generalDb } from './databases';
 import OrderedMarkov from "./orderedMarkov";
+import { lethargy } from './lethargic';
 
 const commonPrefixes = '!$%^&*()-+=.>?/:;'.split('')
-
-const messageDb = new Level('messages',  { valueEncoding: 'json' })
-const attachmentDb = new Level('attachments', { valueEncoding: 'json' })
-const generalDb = new Level('general', { valueEncoding: 'json' })
 
 let m: OrderedMarkov
 
@@ -85,6 +83,11 @@ bot.registerCommand('forget', async (_, args) => {
 bot.registerCommand('forgetImage', async (_, args) => {
   await forgetImage(args[0])
   return 'image gone'
+})
+
+bot.registerCommand('lethargy', async (msg, args) => {
+  await msg.channel.sendTyping()
+  return await lethargy(args)
 })
 
 bot.on('ready', () => console.log('ready'))
