@@ -62,7 +62,7 @@ if (process.env.TOKEN === undefined) {
 const bot = new CommandClient(process.env.TOKEN, {
   intents: ['guildMessages']
 }, {
-  prefix: '>'
+  prefix: process.env.PREFIX ?? '>'
 })
 
 bot.registerCommand('retrain', async (_, args) => {
@@ -86,7 +86,6 @@ bot.registerCommand('forgetImage', async (_, args) => {
 })
 
 bot.registerCommand('lethargy', async (msg, args) => {
-  await msg.channel.sendTyping()
   return await lethargy(args)
 })
 
